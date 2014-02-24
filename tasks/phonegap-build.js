@@ -22,14 +22,19 @@ function responseHandler(name, taskRefs, success, error) {
 }
 
 function start(taskRefs) {
-  var uploadHandler = responseHandler("Upload", taskRefs, function () {
+  var uploadHandler = responseHandler("Upload", taskRefs, function (response, body) {
+    if (!taskRefs.options.appId){
+      var appId = body.id;
+      taskRefs.options.appId = appId;
+      taskRefs.log.warn("APPID: " + appId);
+    }
     if (taskRefs.options.download) downloadApps(taskRefs, taskRefs.done);
     else taskRefs.done();
   });
 
   taskRefs.needle = wrapNeedle("https://build.phonegap.com", taskRefs.options);
 
-  if (taskRefs.options.keys) {
+  if (taskRefs.options.keys && taskRefs.options.appId) {
     unlockKeys(taskRefs, uploadZip.bind(null, taskRefs, uploadHandler));
   } else {
     uploadZip(taskRefs, uploadHandler);
@@ -67,14 +72,20 @@ function uploadZip(taskRefs, callback) {
       data;
 
   if (taskRefs.options.isRepository) {
-    data = { data: { pull: true } };
+    data = { data: { pull: true , create_method: 'remote_repo', title: 'app'}};
   } else {
-    data = { file: { file: taskRefs.options.archive, content_type: "application/zip" }};
+    data = {
+      file: { file: taskRefs.options.archive, content_type: "application/zip" },
+      data: {create_method: 'file', title: 'app'}
+    };
     config.multipart = true;
   }
 
   taskRefs.log.ok("Starting upload");
-  taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, data, config, callback);
+  if(taskRefs.options.appId)
+    taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, data, config, callback);
+  else
+    taskRefs.needle.post('/api/v1/apps/', data, config, callback)
 }
 
 function downloadApps(taskRefs, callback) {
