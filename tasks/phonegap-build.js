@@ -144,6 +144,11 @@ module.exports = function (grunt) {
       pollRate: 15000
     });
 
+    if (!opts.archive) {
+      grunt.log.fail("No 'archive' option specified");
+      return false;
+    }
+
     if (!grunt.file.exists(opts.archive)) {
       grunt.log.fail("Archive at " + opts.archive + " does not exist! Forgot to run 'zip' task before? Did 'zip' succeed?");
       return false;
