@@ -155,7 +155,13 @@ module.exports = function (grunt) {
           needle: null /* wrapped version added in start */
         };
 
-    if (!opts.user.password && !opts.user.token) {
+    if (!opts.user || (!opts.user.email && !opts.user.token)) {
+      grunt.log.fail("No authentication options specified. " +
+                     "Please provide either a Github auth token or your PhoneGap Build email")
+      return false;
+    }
+
+    if (opts.user.username && !opts.user.password) {
       read({ prompt: 'Password: ', silent: true }, function (er, password) {
         opts.user.password = password;
         start(taskRefs);
