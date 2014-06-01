@@ -31,7 +31,7 @@ Then, some configuration for phonegap-build is needed:
 
 ### General options
  1. ```appId```: The App ID of the application on build.phonegap.com (see details of your app there to get it)
- 2. ```user```: The email and password or the Github authentication token (all three optional) you log in with on build.phonegap.com. If you leave out your password it will prompt you when grunt runs.
+ 2. ```user```: An object containing the email and password or the Github authentication token (all three optional) you log in with on build.phonegap.com. If you leave out your password it will prompt you when grunt runs. Note that these must be 'legacy' PhoneGap Build credentials: Adobe ID credentials are not currently supported in the PhoneGap Build API.
  3. ```timeout```: (optional, default: 60 seconds) a timeout. You may need to increase this value if you are trying to upload a large app or have a slow connection.
  4. ```pollRate```: (optional, default: 15 seconds) The rate at which the plugin will poll when checking to see if the apps have been built.
 
