@@ -1,4 +1,9 @@
-var needle = require("needle"),
+var gulp = require('gulp'),
+    gutil = require('gulp-util'),
+    _ = require('lodash'),
+    archiver = require('archiver'),
+    through = require('through2'),
+    needle = require("needle"),
     wrapNeedle = require("../util/wrap-needle"),
     read = require("read");
 
@@ -75,7 +80,7 @@ function uploadZip(taskRefs, callback) {
     data = { data: { pull: true , create_method: 'remote_repo', title: 'app'}};
   } else {
     data = {
-      file: { file: taskRefs.options.archive, content_type: "application/zip" },
+      file: taskRefs.options.archive,
       data: {create_method: 'file', title: 'app'}
     };
     config.multipart = true;
@@ -137,31 +142,63 @@ function downloadApps(taskRefs, callback) {
   timeoutId = setTimeout(check, taskRefs.options.pollRate);
 }
 
-module.exports = function (grunt) {
-  grunt.registerMultiTask("phonegap-build", "Creates a ZIP archive and uploads it to build.phonegap.com to create a new build", function (args) {
-    var opts = this.options({
+module.exports = function (options) {
+    var zip = archiver('zip');
+    var firstFile = null;
+    var opts = _.extend({}, {
       timeout: 60000,
       pollRate: 15000
+    }, options);
+
+    return through.obj(function (file, enc, cb) {
+
+        if (file.isNull()) {
+            cb();
+            return;
+        } // ignore
+
+        if (!firstFile) {
+            firstFile = file;
+        }
+
+        zip.append(file.contents, { name: file.relative });
+        cb();
+    }, function () {
+        var done = function () { taskRefs.log.ok('Application sent') },
+            taskRefs = {
+                log: {
+                    ok: function (msg) {
+                        gutil.log('phonegap-build - info', gutil.colors.cyan(msg));
+                    },
+                    fail: function (msg) {
+                        gutil.log('phonegap-build - fail', gutil.colors.magenta(msg))
+                    },
+                    error: function (msg) {
+                        gutil.log('phonegap-build - error', gutil.colors.magenta(msg))
+                    },
+                    warn: function (msg) {
+                        gutil.log('phonegap-build - warn', gutil.colors.magenta(msg))
+                    }
+                }, options: opts, done: done,
+                needle: null, /* wrapped version added in start */
+                archive: zip.finalize()
+            };
+
+        zip.on('error', function (err) {
+            taskRefs.log.error(err);
+        });
+
+        zip.end(function () {
+            taskRefs.log.ok('Archive done', arguments);
+
+            if (!opts.user.password && !opts.user.token) {
+                read({ prompt: 'Password: ', silent: true }, function (er, password) {
+                    opts.user.password = password;
+                    start(taskRefs);
+                });
+            } else {
+                start(taskRefs);
+            }
+        });
     });
-
-    if (!grunt.file.exists(opts.archive)) {
-      grunt.log.fail("Archive at " + opts.archive + " does not exist! Forgot to run 'zip' task before? Did 'zip' succeed?");
-      return false;
-    }
-
-    var done = this.async(),
-        taskRefs = {
-          log: grunt.log, options: opts, done: done,
-          needle: null /* wrapped version added in start */
-        };
-
-    if (!opts.user.password && !opts.user.token) {
-      read({ prompt: 'Password: ', silent: true }, function (er, password) {
-        opts.user.password = password;
-        start(taskRefs);
-      });
-    } else {
-      start(taskRefs);
-    }
-  });
 }

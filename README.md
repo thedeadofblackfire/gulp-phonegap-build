@@ -1,12 +1,13 @@
-# grunt-phonegap-build
-This is a grunt-task to upload a ZIP archive to [build.phonegap.com](http://build.phonegap.com) and trigger a new build.
+# THIS PROJECT IS A FORK OF [centralway/grunt-phonegap-build](https://github.com/centralway/grunt-phonegap-build) UPDATED FOR GULP
+
+# gulp-phonegap-build
+This is a grunt-task to upload files to [build.phonegap.com](http://build.phonegap.com) and trigger a new build.
 
 ## Current version & development
-The current version is **0.0.8**, this project is in **BETA** and under **active** development.
+The current version is **0.0.1**, this project is in **BETA** and under **active** development.
 
 ##Configuration
-First of all, you need a ZIP file, containing the contents of the PhoneGap app to be built. This can be created using [grunt-zipstream](https://github.com/Two-Screen/grunt-zipstream) for example.
-The ZIP file should have the "index.html" and the ["Config.xml"](http://build.phonegap.com/docs/config-xml) in the root level and all required resources below, for example:
+The files should have the "index.html" and the ["Config.xml"](http://build.phonegap.com/docs/config-xml) in the root level and all required resources below, for example:
 
     ├── Config.xml
     ├── css
@@ -35,9 +36,6 @@ Then, some configuration for phonegap-build is needed:
  3. ```timeout```: (optional, default: 60 seconds) a timeout. You may need to increase this value if you are trying to upload a large app or have a slow connection.
  4. ```pollRate```: (optional, default: 15 seconds) The rate at which the plugin will poll when checking to see if the apps have been built.
 
-### For file-based applications (using a *.zip file)
- 1. ```archive```: The path (or filename, if it's in the same directory as the Gruntfile) to the ZIP archive
- 
 ### For repository-based applications (using a github repository)
 1. ```isRepository```: True to set the build method to "pull from repository"
 
@@ -59,58 +57,37 @@ Then, some configuration for phonegap-build is needed:
 
 That's all. Once you configured the build-phonegap, you can run
 
-    $ grunt phonegap-build
-or if you have a "zip" target to create the archive before:
-
-    $ grunt zip phonegap-build
+    $ gulp phonegap-build
+    
 
 to create a new build.
 **Note:** This is a multitask, so you can specify different configurations for it (e.g. test and production). You need to specify at least one configuration
 Here is an example for a Gruntfile.js:
 
-    module.exports = function(grunt) {
+    var gulp = require('gulp');
+    var phonegapBuild = require('gulp-phonegap-build');
 
-      // Project configuration.
-      grunt.initConfig({
-        "phonegap-build": {
-          debug: {
-            options: {
-              archive: "app.zip",
-              "appId": "1234",
-              "user": {
-                "email": "your.email@example.org",
-                "password": "yourPassw0rd"
-              }
-            }
-          },
-          release: {
-            options: {
+    gulp.task('phonegap-build', function () {
+        gulp.src('dist/**/*')
+            .pipe(phonegapBuild({
               "isRepository": "true",
               "appId": "9876",
               "user": {
                 "token": "ABCD123409876XYZ"
               }
-            }
-          }
-        },
-        zip: {
-          app: {
-            file: {
-              src: ["index.html", "js/**/*.js", "css/**/*.js", "icon.png", "images/background.jpg"],
-              dest: "app.zip"
-            }
-         }
-        }
-      });
+            }));
+    });
+    
+    gulp.task('phonegap-build-debug', function () {
+        gulp.src('dist/**/*')
+            .pipe(phonegapeBuild({
+              "appId": "1234",
+              "user": {
+                "email": "your.email@example.org",
+                "password": "yourPassw0rd"
+              }
+            }));
+    });
+    
+    gulp.task('default', ['phonegap-build']);
 
-      // Load tasks.
-      grunt.loadNpmTasks('grunt-zipstream');
-      grunt.loadNpmTasks('grunt-phonegap-build');
-
-      // Default task.
-      grunt.registerTask('default', 'zip phonegap-build:debug');
-    };
-This example also aliased
-
-    $ grunt
-to run "zip" and then "phonegap-build" for you.
