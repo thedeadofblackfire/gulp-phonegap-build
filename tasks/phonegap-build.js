@@ -3,6 +3,8 @@ var gulp = require('gulp'),
     _ = require('lodash'),
     archiver = require('archiver'),
     through = require('through2'),
+    buffer = require('vinyl-buffer'),
+    source = require('vinyl-source-stream'),
     needle = require("needle"),
     wrapNeedle = require("../util/wrap-needle"),
     read = require("read");
@@ -80,7 +82,11 @@ function uploadZip(taskRefs, callback) {
     data = { data: { pull: true , create_method: 'remote_repo', title: 'app'}};
   } else {
     data = {
-      file: taskRefs.options.archive,
+      file: {
+          buffer: taskRefs.archive,
+          filename: 'app.zip',
+          content_type: 'application/octet-stream'
+      },
       data: {create_method: 'file', title: 'app'}
     };
     config.multipart = true;
@@ -164,7 +170,7 @@ module.exports = function (options) {
         zip.append(file.contents, { name: file.relative });
         cb();
     }, function () {
-        var done = function () { taskRefs.log.ok('Application sent') },
+      var done = function () { taskRefs.log.ok('Application sent') },
             taskRefs = {
                 log: {
                     ok: function (msg) {
@@ -180,17 +186,21 @@ module.exports = function (options) {
                         gutil.log('phonegap-build - warn', gutil.colors.magenta(msg))
                     }
                 }, options: opts, done: done,
-                needle: null, /* wrapped version added in start */
-                archive: zip.finalize()
+                needle: null // wrapped version added in start
             };
 
         zip.on('error', function (err) {
             taskRefs.log.error(err);
         });
 
-        zip.end(function () {
-            taskRefs.log.ok('Archive done', arguments);
+        zip.finalize();
+        zip.pipe(source('app.zip'))
+            .pipe(buffer())
+            .pipe(through.obj(function (file, err, cb) {
+                taskRefs.archive = file.contents;
 
+                cb();
+        }, function () {
             if (!opts.user.password && !opts.user.token) {
                 read({ prompt: 'Password: ', silent: true }, function (er, password) {
                     opts.user.password = password;
@@ -199,6 +209,6 @@ module.exports = function (options) {
             } else {
                 start(taskRefs);
             }
-        });
+        }));
     });
-}
+};

@@ -1,7 +1,7 @@
 {
   "name": "gulp-phonegap-build",
   "description": "Build phonegap app via build.phonegap.com",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "http://marcbuils.github.io/gulp-phonegap-build",
   "author": {
     "name": "Marc Buils",
@@ -26,10 +26,12 @@
     "phonegap"
   ],
   "devDependencies": {
+    "archiver": "~0.11.0",
     "gulp": "~3.8.7",
     "gulp-util": "~3.0.0",
     "lodash": "~2.4.1",
     "through2": "~0.6.1",
-    "archiver": "~0.11.0"
+    "vinyl-buffer": "0.0.0",
+    "vinyl-source-stream": "^0.1.1"
   }
 }
