@@ -4,7 +4,7 @@
 This is a grunt-task to upload files to [build.phonegap.com](http://build.phonegap.com) and trigger a new build.
 
 ## Current version & development
-The current version is **0.0.1**, this project is in **BETA** and under **active** development.
+The current version is **0.1.0**, this project is in **BETA** and under **active** development.
 
 ##Configuration
 The files should have the "index.html" and the ["Config.xml"](http://build.phonegap.com/docs/config-xml) in the root level and all required resources below, for example:

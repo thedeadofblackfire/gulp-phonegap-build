@@ -1,7 +1,7 @@
 {
   "name": "gulp-phonegap-build",
   "description": "Build phonegap app via build.phonegap.com",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "homepage": "https://github.com/marcbuils/gulp-phonegap-build",
   "author": {
     "name": "Marc Buils",
