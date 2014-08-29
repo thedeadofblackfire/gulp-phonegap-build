@@ -1,4 +1,4 @@
-# THIS PROJECT IS A FORK OF [centralway/grunt-phonegap-build](https://github.com/centralway/grunt-phonegap-build) UPDATED FOR GULP
+#### THIS PROJECT IS A FORK OF [centralway/grunt-phonegap-build](https://github.com/centralway/grunt-phonegap-build) UPDATED FOR GULP
 
 # gulp-phonegap-build
 This is a grunt-task to upload files to [build.phonegap.com](http://build.phonegap.com) and trigger a new build.
