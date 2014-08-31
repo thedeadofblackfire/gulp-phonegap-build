@@ -37,12 +37,12 @@
 <h1>
 <a name="gulp-phonegap-build" class="anchor" href="#gulp-phonegap-build"><span class="octicon octicon-link"></span></a>gulp-phonegap-build</h1>
 
-<p>This is a grunt-task to upload files to <a href="http://build.phonegap.com">build.phonegap.com</a> and trigger a new build.</p>
+<p>This is a gulp plugin to upload files to <a href="http://build.phonegap.com">build.phonegap.com</a> and trigger a new build.</p>
 
 <h2>
 <a name="current-version--development" class="anchor" href="#current-version--development"><span class="octicon octicon-link"></span></a>Current version &amp; development</h2>
 
-<p>The current version is <strong>0.1.0</strong>, this project is in <strong>BETA</strong> and under <strong>active</strong> development.</p>
+<p>The current version is <strong>0.1.3</strong>, this project is in <strong>BETA</strong> and under <strong>active</strong> development.</p>
 
 <h2>
 <a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h2>
@@ -78,7 +78,7 @@
 <li>
 <code>appId</code>: The App ID of the application on build.phonegap.com (see details of your app there to get it)</li>
 <li>
-<code>user</code>: The email and password or the Github authentication token (all three optional) you log in with on build.phonegap.com. If you leave out your password it will prompt you when grunt runs.</li>
+<code>user</code>: The email and password or the Github authentication token (all three optional) you log in with on build.phonegap.com. If you leave out your password it will prompt you when gulp runs.</li>
 <li>
 <code>timeout</code>: (optional, default: 60 seconds) a timeout. You may need to increase this value if you are trying to upload a large app or have a slow connection.</li>
 <li>
@@ -122,7 +122,7 @@
 
 <p>to create a new build.
 <strong>Note:</strong> This is a multitask, so you can specify different configurations for it (e.g. test and production). You need to specify at least one configuration
-Here is an example for a Gruntfile.js:</p>
+Here is an example for a gulpfile.js:</p>
 
 <pre><code>var gulp = require('gulp');
 var phonegapBuild = require('gulp-phonegap-build');
