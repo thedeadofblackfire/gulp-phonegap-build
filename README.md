@@ -1,10 +1,10 @@
 #### THIS PROJECT IS A FORK OF [centralway/grunt-phonegap-build](https://github.com/centralway/grunt-phonegap-build) UPDATED FOR GULP
 
 # gulp-phonegap-build
-This is a grunt-task to upload files to [build.phonegap.com](http://build.phonegap.com) and trigger a new build.
+This is a gulp plugin to upload files to [build.phonegap.com](http://build.phonegap.com) and trigger a new build.
 
 ## Current version & development
-The current version is **0.1.2**, this project is in **BETA** and under **active** development.
+The current version is **0.1.3**, this project is in **BETA** and under **active** development.
 
 ##Configuration
 The files should have the "index.html" and the ["Config.xml"](http://build.phonegap.com/docs/config-xml) in the root level and all required resources below, for example:
@@ -32,7 +32,7 @@ Then, some configuration for phonegap-build is needed:
 
 ### General options
  1. ```appId```: The App ID of the application on build.phonegap.com (see details of your app there to get it)
- 2. ```user```: The email and password or the Github authentication token (all three optional) you log in with on build.phonegap.com. If you leave out your password it will prompt you when grunt runs.
+ 2. ```user```: The email and password or the Github authentication token (all three optional) you log in with on build.phonegap.com. If you leave out your password it will prompt you when gulp runs.
  3. ```timeout```: (optional, default: 60 seconds) a timeout. You may need to increase this value if you are trying to upload a large app or have a slow connection.
  4. ```pollRate```: (optional, default: 15 seconds) The rate at which the plugin will poll when checking to see if the apps have been built.
 
@@ -62,7 +62,7 @@ That's all. Once you configured the build-phonegap, you can run
 
 to create a new build.
 **Note:** This is a multitask, so you can specify different configurations for it (e.g. test and production). You need to specify at least one configuration
-Here is an example for a Gruntfile.js:
+Here is an example for a gulpfile.js:
 
     var gulp = require('gulp');
     var phonegapBuild = require('gulp-phonegap-build');
