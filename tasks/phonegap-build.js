@@ -123,13 +123,17 @@ function downloadApps(taskRefs, callback) {
   function check() {
     taskRefs.needle.get('/api/v1/apps/' + taskRefs.options.appId, null,
         responseHandler("Checking build status", taskRefs, function (response, data) {
+          var hasPending=false;    
           platformsToDownload.forEach(function (platform) {
             if (data.status[platform] !== 'pending') {
               ready(platform, data.status[platform], data.download[platform]);
             }
+            else {
+                hasPending=true;
+            }
           });
 
-          timeoutId = setTimeout(check, taskRefs.options.pollRate);
+          if (hasPending) timeoutId = setTimeout(check, taskRefs.options.pollRate);
         })
     );
   }
