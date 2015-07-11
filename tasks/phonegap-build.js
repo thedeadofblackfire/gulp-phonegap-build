@@ -170,19 +170,24 @@ module.exports = function (options) {
         zip.append(file.contents, { name: file.relative });
         cb();
     }, function () {
-      var done = function () { taskRefs.log.ok('Application sent') },
+      var   done = function () { self.emit('pg-sent'); taskRefs.log.ok('Application sent'); },
+            self = this,
             taskRefs = {
                 log: {
                     ok: function (msg) {
+                        self.emit('pg-info', msg);
                         gutil.log('phonegap-build - info', gutil.colors.cyan(msg));
                     },
                     fail: function (msg) {
+                        self.emit('pg-fail', msg);
                         gutil.log('phonegap-build - fail', gutil.colors.magenta(msg))
                     },
                     error: function (msg) {
+                        self.emit('pg-error', msg);
                         gutil.log('phonegap-build - error', gutil.colors.magenta(msg))
                     },
                     warn: function (msg) {
+                        self.emit('pg-warn', msg);
                         gutil.log('phonegap-build - warn', gutil.colors.magenta(msg))
                     }
                 }, options: opts, done: done,
