@@ -75,24 +75,40 @@ function unlockKeys(taskRefs, callback) {
 }
 
 function uploadZip(taskRefs, callback) {
-  var config = { },
-      data;
+    var config = { },
+        data ={}
+    
+    var appTitle = (typeof taskRefs.options.title != 'undefined' ? taskRefs.options.title : "App title");
+    data.data = {
+        title : appTitle
+    }
+    if (typeof taskRefs.options.hydrates != 'undefined') {
+        data.data.hydrates = taskRefs.options.hydrates;
+    }
+    if (typeof taskRefs.options.private != 'undefined') {
+        data.data.private = taskRefs.options.private;
+    }
+    if (typeof taskRefs.options.hydrates != 'undefined') {
+        data.data.version = taskRefs.options.version;
+    }
+    if (typeof taskRefs.options.phonegap_version != 'undefined') {
+        data.data.phonegap_version = taskRefs.options.phonegap_version;
+    }
 
-  if (taskRefs.options.isRepository) {
-    data = { data: { pull: true , create_method: 'remote_repo', title: 'app'}};
-  } else {
-    data = {
-      file: {
-          buffer: taskRefs.archive,
-          filename: 'app.zip',
-          content_type: 'application/octet-stream'
-      },
-      data: {create_method: 'file', title: 'app'}
-    };
-    config.multipart = true;
-  }
+    if (taskRefs.options.isRepository) {
+        data.data.pull = true;
+        data.data.create_method = 'remote_repo';
+    } else {
+        data.data.create_method = 'file';
+        data.file = {
+            buffer: taskRefs.archive,
+            filename: 'app.zip',
+            content_type: 'application/octet-stream'
+        }
+        config.multipart = true;
+    }
 
-  taskRefs.log.ok("Starting upload");
+    taskRefs.log.ok("Starting upload");
   if(taskRefs.options.appId)
     taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, data, config, callback);
   else
