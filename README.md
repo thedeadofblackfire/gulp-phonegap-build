@@ -67,8 +67,9 @@ Here is an example for a gulpfile.js:
     var gulp = require('gulp');
     var phonegapBuild = require('gulp-phonegap-build');
 
+    // {dot: true} here to inlude .pgbomit file in zip
     gulp.task('phonegap-build', function () {
-        gulp.src('dist/**/*')
+        gulp.src('dist/**/*', {dot: true})
             .pipe(phonegapBuild({
               "isRepository": "true",
               "appId": "9876",
@@ -79,7 +80,7 @@ Here is an example for a gulpfile.js:
     });
     
     gulp.task('phonegap-build-debug', function () {
-        gulp.src('dist/**/*')
+        gulp.src('dist/**/*', {dot: true})
             .pipe(phonegapeBuild({
               "appId": "1234",
               "user": {
