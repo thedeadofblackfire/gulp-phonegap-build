@@ -35,8 +35,25 @@ function start(taskRefs) {
       taskRefs.options.appId = appId;
       taskRefs.log.warn("APPID: " + appId);
     }
-    if (taskRefs.options.download) downloadApps(taskRefs, taskRefs.done);
-    else taskRefs.done();
+
+    var buildHandler = responseHandler("Build", taskRefs, function () {
+        if (taskRefs.options.download) downloadApps(taskRefs, taskRefs.done);
+        else taskRefs.done();
+    });
+
+    //There is a bug in PhoneGap Build API that doesn't allow to trigger build for all platforms
+    if (!taskRefs.options.platforms) {
+        taskRefs.log.warn("Target platform(s) is not specified.");
+    }
+
+    var config = {
+        multipart: true
+    };
+    var data = {
+        platforms: taskRefs.options.platforms || []
+    };
+    var postData = {data: JSON.stringify(data)};
+    taskRefs.needle.post('/api/v1/apps/'  + taskRefs.options.appId + '/build', postData, config, buildHandler);
   });
 
   taskRefs.needle = wrapNeedle("https://build.phonegap.com", taskRefs.options);

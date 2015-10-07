@@ -39,6 +39,13 @@ Then, some configuration for phonegap-build is needed:
 ### For repository-based applications (using a github repository)
 1. ```isRepository```: True to set the build method to "pull from repository"
 
+### Target platforms
+1. ```platforms```: array of the target platforms to build. For example:
+
+        platforms: ['ios', 'android']
+        
+Note: there is a bug in PhoneGap API that don't allow to trigger build until target platforms are specified.
+
 ### When unlocking keys
  1. ```keys```: A map of platform name [ios, android, ...] to parameters required to unlock the keys. For example:
 
