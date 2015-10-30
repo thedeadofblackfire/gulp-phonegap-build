@@ -202,8 +202,8 @@ module.exports = function (options) {
 
         zip.append(file.contents, { name: file.relative });
         cb();
-    }, function () {
-      var   done = function () { self.emit('pg-sent'); taskRefs.log.ok('Application sent'); },
+    }, function (cb) {
+      var   done = function () { self.emit('pg-sent'); taskRefs.log.ok('Application sent'); cb(); },
             self = this,
             taskRefs = {
                 log: {
