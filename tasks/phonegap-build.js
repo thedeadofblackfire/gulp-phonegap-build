@@ -123,6 +123,7 @@ function uploadZip(taskRefs, callback) {
             content_type: 'application/octet-stream'
         }
         config.multipart = true;
+        config.timeout = taskRefs.options.timeout;
     }
 
     taskRefs.log.ok("Starting upload");
