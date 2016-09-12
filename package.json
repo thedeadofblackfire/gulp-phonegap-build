@@ -7,7 +7,28 @@
     "name": "Marc Buils",
     "email": "marc.buils@marcbuils.fr"
   },
-  "contributors": [],
+  "contributors": [
+    {
+      "name" : "Kensuke Fujita",
+      "url" : "https://github.com/uchida75cm"
+    },
+    {
+      "name" : "Alex",
+      "url" : "https://github.com/whitecolor"
+    },
+    {
+      "name" : "Alex Mrynsky",
+      "url" : "https://github.com/amrynsky"
+    },
+    {
+      "name" : "corneyl",
+      "url" : "https://github.com/corneyl"
+    },
+    {
+      "name" : "Charles Fourdrignier",
+      "url" : "https://github.com/Charlynux"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/marcbuils/gulp-phonegap-build.git"
