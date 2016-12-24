@@ -1,7 +1,7 @@
 {
-  "name": "gulp-phonegap-build",
+  "name": "ms-gulp-phonegap-build",
   "description": "Build phonegap app via build.phonegap.com",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "homepage": "http://marcbuils.github.io/gulp-phonegap-build",
   "author": {
     "name": "Mahendra Soni",
