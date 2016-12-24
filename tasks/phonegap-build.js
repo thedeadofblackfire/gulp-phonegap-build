@@ -111,6 +111,9 @@ function uploadZip(taskRefs, callback) {
     if (typeof taskRefs.options.phonegap_version != 'undefined') {
         data.data.phonegap_version = taskRefs.options.phonegap_version;
     }
+    if (typeof taskRefs.options.tag != 'undefined') {
+        data.data.tag = taskRefs.options.tag;
+    }
 
     if (taskRefs.options.isRepository) {
         data.data.pull = true;
