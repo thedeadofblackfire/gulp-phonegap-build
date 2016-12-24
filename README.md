@@ -82,7 +82,8 @@ Here is an example for a gulpfile.js:
               "appId": "9876",
               "user": {
                 "token": "ABCD123409876XYZ"
-              }
+              },
+              "tag": "deploy" //tag or branch name
             }));
     });
     
@@ -93,7 +94,8 @@ Here is an example for a gulpfile.js:
               "user": {
                 "email": "your.email@example.org",
                 "password": "yourPassw0rd"
-              }
+              },
+              "tag": "deploy" //tag or branch name
             }));
     });
     
