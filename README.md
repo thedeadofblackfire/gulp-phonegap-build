@@ -35,6 +35,7 @@ Then, some configuration for phonegap-build is needed:
  2. ```user```: The email and password or the Github authentication token (all three optional) you log in with on build.phonegap.com. If you leave out your password it will prompt you when gulp runs.
  3. ```timeout```: (optional, default: 60 seconds) a timeout. You may need to increase this value if you are trying to upload a large app or have a slow connection.
  4. ```pollRate```: (optional, default: 15 seconds) The rate at which the plugin will poll when checking to see if the apps have been built.
+ 5. ```tag```: (optional, default: master) a tag or branch name. You can add a tag or branch name to pull the code from. 
 
 ### For repository-based applications (using a github repository)
 1. ```isRepository```: True to set the build method to "pull from repository"
@@ -82,7 +83,8 @@ Here is an example for a gulpfile.js:
               "appId": "9876",
               "user": {
                 "token": "ABCD123409876XYZ"
-              }
+              },
+              "tag": "deploy" //tag or branch name
             }));
     });
     
@@ -93,7 +95,8 @@ Here is an example for a gulpfile.js:
               "user": {
                 "email": "your.email@example.org",
                 "password": "yourPassw0rd"
-              }
+              },
+              "tag": "deploy" //tag or branch name
             }));
     });
     
