@@ -10,104 +10,144 @@ var gulp = require('gulp'),
     read = require("read");
 
 function responseHandler(name, taskRefs, success, error) {
-  error = error || taskRefs.done;
+    error = error || taskRefs.done;
 
-  return function (err, resp, body) {
-    if (!err && (resp.statusCode >= 200 && resp.statusCode < 400)) {
-      taskRefs.log.ok(name + " successful (HTTP " + resp.statusCode + ")");
-      success(resp, body);
-    } else if (err) {
-      taskRefs.log.fail(name + " failed:");
-      taskRefs.log.error("Message: " + err);
-      error(new Error(err));
-    } else {
-      taskRefs.log.fail(name + " failed (HTTP " + resp.statusCode + ")");
-      taskRefs.log.error("Message: " + body.error);
-      error(new Error(body.error));
+    return function (err, resp, body) {
+        if (!err && (resp.statusCode >= 200 && resp.statusCode < 400)) {
+            taskRefs.log.ok(name + " successful (HTTP " + resp.statusCode + ")");
+            success(resp, body);
+        } else if (err) {
+            taskRefs.log.fail(name + " failed:");
+            taskRefs.log.error("Message: " + err);
+            error(new Error(err));
+        } else {
+            taskRefs.log.fail(name + " failed (HTTP " + resp.statusCode + ")");
+            taskRefs.log.error("Message: " + body.error);
+            error(new Error(body.error));
+        }
     }
-  }
 }
 
 function start(taskRefs) {
-  var uploadHandler = responseHandler("Upload", taskRefs, function (response, body) {
-    if (!taskRefs.options.appId){
-      var appId = body.id;
-      taskRefs.options.appId = appId;
-      taskRefs.log.warn("APPID: " + appId);
-    }
+    var uploadHandler = responseHandler("Upload", taskRefs, function (response, body) {
+        if (!taskRefs.options.appId) {
+            var appId = body.id;
+            taskRefs.options.appId = appId;
+            taskRefs.log.warn("APPID: " + appId);
+        }
 
-    var buildHandler = responseHandler("Build", taskRefs, function () {
-        if (taskRefs.options.download) downloadApps(taskRefs, taskRefs.done);
-        else taskRefs.done();
+        var buildHandler = responseHandler("Build", taskRefs, function () {
+            if (taskRefs.options.download) downloadApps(taskRefs, taskRefs.done);
+            else taskRefs.done();
+        });
+
+        //There is a bug in PhoneGap Build API that doesn't allow to trigger build for all platforms
+        if (!taskRefs.options.platforms) {
+            taskRefs.log.warn("Target platform(s) is not specified.");
+        }
+
+        var config = {
+            multipart: true
+        };
+        var data = {
+            platforms: taskRefs.options.platforms || []
+        };
+        var postData = {
+            data: JSON.stringify(data)
+        };
+        taskRefs.needle.post('/api/v1/apps/' + taskRefs.options.appId + '/build', postData, config, buildHandler);
     });
 
-    //There is a bug in PhoneGap Build API that doesn't allow to trigger build for all platforms
-    if (!taskRefs.options.platforms) {
-        taskRefs.log.warn("Target platform(s) is not specified.");
+    taskRefs.needle = wrapNeedle("https://build.phonegap.com", taskRefs.options);
+
+    if (taskRefs.options.keys && taskRefs.options.appId) {
+        assignKeys(taskRefs, uploadZip.bind(null, taskRefs, uploadHandler));
+        //unlockKeys(taskRefs, uploadZip.bind(null, taskRefs, uploadHandler));
+    } else {
+        uploadZip(taskRefs, uploadHandler);
     }
-
-    var config = {
-        multipart: true
-    };
-    var data = {
-        platforms: taskRefs.options.platforms || []
-    };
-    var postData = {data: JSON.stringify(data)};
-    taskRefs.needle.post('/api/v1/apps/'  + taskRefs.options.appId + '/build', postData, config, buildHandler);
-  });
-
-  taskRefs.needle = wrapNeedle("https://build.phonegap.com", taskRefs.options);
-
-  if (taskRefs.options.keys && taskRefs.options.appId) {
-    assignKeys(taskRefs, uploadZip.bind(null, taskRefs, uploadHandler));
-    //unlockKeys(taskRefs, uploadZip.bind(null, taskRefs, uploadHandler));
-  } else {
-    uploadZip(taskRefs, uploadHandler);
-  }
 }
 
 function unlockKeys(taskRefs, callback) {
-  taskRefs.needle.get('/api/v1/apps/' + taskRefs.options.appId, null,
-      responseHandler("Get keys", taskRefs, function (response, body) {
-        var keys = body.keys,
-            platformsUnlockable = Object.keys(taskRefs.options.keys),
-            numUnlockable = platformsUnlockable.length;
+    taskRefs.needle.get('/api/v1/apps/' + taskRefs.options.appId, null,
+        responseHandler("Get keys", taskRefs, function (response, body) {
+            var keys = body.keys,
+                platformsUnlockable = Object.keys(taskRefs.options.keys),
+                numUnlockable = platformsUnlockable.length;
 
-        function unlocked() {
-          if (--numUnlockable === 0) callback();
-        }
+            function unlocked() {
+                if (--numUnlockable === 0) callback();
+            }
 
-        platformsUnlockable.forEach(function (platform) {
-          var buildInfo = keys[platform];
+            platformsUnlockable.forEach(function (platform) {
+                var buildInfo = keys[platform];
 
-          if (buildInfo) {
-            taskRefs.needle.put(keys[platform].link, { data: taskRefs.options.keys[platform] }, null,
-                responseHandler("Unlocking " + platform, taskRefs, unlocked, unlocked));
-          } else {
-            taskRefs.log.warn("No key attached to app for " + platform);
-            unlocked();
-          }
-        });
-      })
-  );
+                if (buildInfo) {
+                    delete taskRefs.options.keys[platform]['id']; // be sure to remove id on keys object
+                    taskRefs.needle.put(keys[platform].link, {
+                            data: taskRefs.options.keys[platform]
+                        }, null,
+                        responseHandler("Unlocking " + platform, taskRefs, unlocked, unlocked));
+                } else {
+                    taskRefs.log.warn("No key attached to app for " + platform);
+                    unlocked();
+                }
+            });
+        })
+    );
 }
 
 function assignKeys(taskRefs, callback) {
+
+    var platformsToRebuild = Object.keys(taskRefs.options.keys),
+        numToRebuild = platformsToRebuild.length,
+        timeoutId;
+
+    function buildCompleted() {
+        if (--numToRebuild === 0) {
+            clearTimeout(timeoutId);
+            callback();
+            //unlockKeys(taskRefs, callback);
+        }
+    }
+
+    function checkRebuild() {
+        taskRefs.needle.get('/api/v1/apps/' + taskRefs.options.appId, null,
+            responseHandler("Checking build status", taskRefs, function (response, data) {
+                platformsToRebuild.forEach(function (platform) {
+                    if (data.status[platform] !== 'pending') {
+                        buildCompleted();
+                    }
+                });
+
+                timeoutId = setTimeout(checkRebuild, taskRefs.options.pollRate);
+            })
+        );
+    }
+
+    function startRebuild() {
+        taskRefs.log.warn('start waiting pending status');
+        timeoutId = setTimeout(checkRebuild, taskRefs.options.pollRate);
+    }
+
+    var data = {
+        "keys": taskRefs.options.keys
+    };
+
     if (taskRefs.options.keys && ((taskRefs.options.keys.ios && taskRefs.options.keys.ios.id) || (taskRefs.options.keys.android && taskRefs.options.keys.android.id))) {
-        //taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, {"keys": taskRefs.options.keys}, {}, unlockKeys(taskRefs, callback));
-        taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, {"keys": taskRefs.options.keys}, {}, unlockKeys.bind(null, taskRefs, callback));
+        taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, data, {}, startRebuild);
     } else {
         unlockKeys(taskRefs, callback);
     }
 }
 
 function uploadZip(taskRefs, callback) {
-    var config = { },
-        data ={}
-    
+    var config = {},
+        data = {}
+
     var appTitle = (typeof taskRefs.options.title != 'undefined' ? taskRefs.options.title : "App title");
     data.data = {
-        title : appTitle
+        title: appTitle
     }
     if (typeof taskRefs.options.hydrates != 'undefined') {
         data.data.hydrates = taskRefs.options.hydrates;
@@ -140,67 +180,67 @@ function uploadZip(taskRefs, callback) {
     }
 
     taskRefs.log.ok("Starting upload");
-  if(taskRefs.options.appId)
-    taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, data, config, callback);
-  else
-    taskRefs.needle.post('/api/v1/apps/', data, config, callback)
+    if (taskRefs.options.appId)
+        taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, data, config, callback);
+    else
+        taskRefs.needle.post('/api/v1/apps/', data, config, callback)
 }
 
 function downloadApps(taskRefs, callback) {
-  var platformsToDownload = Object.keys(taskRefs.options.download),
-      numToDownload = platformsToDownload.length,
-      timeoutId;
+    var platformsToDownload = Object.keys(taskRefs.options.download),
+        numToDownload = platformsToDownload.length,
+        timeoutId;
 
-  function completed() {
-    if (--numToDownload === 0) {
-      clearTimeout(timeoutId);
-      callback();
+    function completed() {
+        if (--numToDownload === 0) {
+            clearTimeout(timeoutId);
+            callback();
+        }
     }
-  }
 
-  function ready(platform, status, url) {
-    platformsToDownload.splice(platformsToDownload.indexOf(platform), 1);
-    if (status === 'complete') {
-      taskRefs.needle.get(url, null,
-          responseHandler("Getting download location for " + platform, taskRefs, function (response, data) {
-            taskRefs.log.ok("Downloading " + platform + " app");
-            needle.get(data.location, null,
-                function (err, response, data) {
-                  taskRefs.log.ok("Downloaded " + platform + " app");
-                  require('fs').writeFile(taskRefs.options.download[platform], data, completed);
-                }
+    function ready(platform, status, url) {
+        platformsToDownload.splice(platformsToDownload.indexOf(platform), 1);
+        if (status === 'complete') {
+            taskRefs.needle.get(url, null,
+                responseHandler("Getting download location for " + platform, taskRefs, function (response, data) {
+                    taskRefs.log.ok("Downloading " + platform + " app");
+                    needle.get(data.location, null,
+                        function (err, response, data) {
+                            taskRefs.log.ok("Downloaded " + platform + " app");
+                            require('fs').writeFile(taskRefs.options.download[platform], data, completed);
+                        }
+                    );
+                }, completed)
             );
-          }, completed)
-      );
-    } else {
-      taskRefs.log.error('Build failed for ' + platform + ': ' + status);
-      completed();
+        } else {
+            taskRefs.log.error('Build failed for ' + platform + ': ' + status);
+            completed();
+        }
     }
-  }
 
-  function check() {
-    taskRefs.needle.get('/api/v1/apps/' + taskRefs.options.appId, null,
-        responseHandler("Checking build status", taskRefs, function (response, data) {
-          platformsToDownload.forEach(function (platform) {
-            if (data.status[platform] !== 'pending') {
-              ready(platform, data.status[platform], data.download[platform]);
-            }
-          });
+    function check() {
+        taskRefs.needle.get('/api/v1/apps/' + taskRefs.options.appId, null,
+            responseHandler("Checking build status", taskRefs, function (response, data) {
+                platformsToDownload.forEach(function (platform) {
+                    if (data.status[platform] !== 'pending') {
+                        ready(platform, data.status[platform], data.download[platform]);
+                    }
+                });
 
-          timeoutId = setTimeout(check, taskRefs.options.pollRate);
-        })
-    );
-  }
+                timeoutId = setTimeout(check, taskRefs.options.pollRate);
+            })
+        );
+    }
 
-  timeoutId = setTimeout(check, taskRefs.options.pollRate);
+    timeoutId = setTimeout(check, taskRefs.options.pollRate);
 }
 
 module.exports = function (options) {
     var zip = archiver('zip');
     var firstFile = null;
     var opts = _.extend({}, {
-      timeout: 60000,
-      pollRate: 15000
+        timeout: 60000,
+        pollRate: 15000
     }, options);
 
     return through.obj(function (file, enc, cb) {
@@ -214,10 +254,16 @@ module.exports = function (options) {
             firstFile = file;
         }
 
-        zip.append(file.contents, { name: file.relative });
+        zip.append(file.contents, {
+            name: file.relative
+        });
         cb();
     }, function (cb) {
-      var   done = function () { self.emit('pg-sent'); taskRefs.log.ok('Application sent'); cb(); },
+        var done = function () {
+                self.emit('pg-sent');
+                taskRefs.log.ok('Application sent');
+                cb();
+            },
             self = this,
             taskRefs = {
                 log: {
@@ -237,7 +283,9 @@ module.exports = function (options) {
                         self.emit('pg-warn', msg);
                         gutil.log('phonegap-build - warn', gutil.colors.magenta(msg))
                     }
-                }, options: opts, done: done,
+                },
+                options: opts,
+                done: done,
                 needle: null // wrapped version added in start
             };
 
@@ -252,15 +300,18 @@ module.exports = function (options) {
                 taskRefs.archive = file.contents;
 
                 cb();
-        }, function () {
-            if (!opts.user.password && !opts.user.token) {
-                read({ prompt: 'Password: ', silent: true }, function (er, password) {
-                    opts.user.password = password;
+            }, function () {
+                if (!opts.user.password && !opts.user.token) {
+                    read({
+                        prompt: 'Password: ',
+                        silent: true
+                    }, function (er, password) {
+                        opts.user.password = password;
+                        start(taskRefs);
+                    });
+                } else {
                     start(taskRefs);
-                });
-            } else {
-                start(taskRefs);
-            }
-        }));
+                }
+            }));
     });
 };
