@@ -94,7 +94,8 @@ function unlockKeys(taskRefs, callback) {
 
 function assignKeys(taskRefs, callback) {
     if (taskRefs.options.keys && ((taskRefs.options.keys.ios && taskRefs.options.keys.ios.id) || (taskRefs.options.keys.android && taskRefs.options.keys.android.id))) {
-        taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, taskRefs.options.keys, {}, unlockKeys.bind(null, taskRefs, callback));
+        //taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, {"keys": taskRefs.options.keys}, {}, unlockKeys(taskRefs, callback));
+        taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, {"keys": taskRefs.options.keys}, {}, unlockKeys.bind(null, taskRefs, callback));
     } else {
         unlockKeys(taskRefs, callback);
     }
