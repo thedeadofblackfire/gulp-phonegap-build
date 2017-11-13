@@ -59,7 +59,8 @@ function start(taskRefs) {
   taskRefs.needle = wrapNeedle("https://build.phonegap.com", taskRefs.options);
 
   if (taskRefs.options.keys && taskRefs.options.appId) {
-    unlockKeys(taskRefs, uploadZip.bind(null, taskRefs, uploadHandler));
+    assignKeys(taskRefs, uploadZip.bind(null, taskRefs, uploadHandler));
+    //unlockKeys(taskRefs, uploadZip.bind(null, taskRefs, uploadHandler));
   } else {
     uploadZip(taskRefs, uploadHandler);
   }
@@ -89,6 +90,14 @@ function unlockKeys(taskRefs, callback) {
         });
       })
   );
+}
+
+function assignKeys(taskRefs, callback) {
+    if (taskRefs.options.keys && ((taskRefs.options.keys.ios && taskRefs.options.keys.ios.id) || (taskRefs.options.keys.android && taskRefs.options.keys.android.id))) {
+        taskRefs.needle.put('/api/v1/apps/' + taskRefs.options.appId, taskRefs.options.keys, {}, unlockKeys.bind(null, taskRefs, callback));
+    } else {
+        unlockKeys(taskRefs, callback);
+    }
 }
 
 function uploadZip(taskRefs, callback) {
